@@ -1,4 +1,4 @@
-# Detecting Anomalies in Public Datasets Using Query Logs
+# Anomaly Detection in Public Datasets using Query Logs
 
 This repository contains the complete implementation, datasets, evaluation scripts, and visualizations for our research paper on detecting multi-category anomalies in database query logs using unsupervised hybrid machine learning models.
 
