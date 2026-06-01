@@ -1,50 +1,59 @@
-# Anomaly Detection in Public Datasets using Query Logs
+# Anomaly Detection in Public Dataset Query Logs
 
-This repository contains the complete implementation, datasets, evaluation scripts, and visualizations for our research paper on detecting multi-category anomalies in database query logs using unsupervised hybrid machine learning models.
+> *Can one model rule them all, or does each anomaly type need its own bouncer?*
 
-The core objective of this research is to build a unified detection framework and answer a critical architectural question: **Can a single machine learning model accurately detect security, temporal, and performance anomalies simultaneously, or does each anomaly category require a specialized detector?**
-
----
-
-## 📌 Project Overview
-
-Database query logs are rich sources of operational telemetry. This project benchmarks how effectively unsupervised machine learning can flag malicious, inefficient, or structurally anomalous database activity without labeled training data.
-
-### Anomaly Taxonomy
-The framework classifies anomalies into three distinct categories:
-1. **Security Anomalies:** Unusual query structures, access to sensitive tables outside normal user patterns, and structural signatures resembling SQL injection attacks.
-2. **Temporal Anomalies:** Queries executing at irregular hours, unexpected frequency spikes, and high-volume bulk operations running outside scheduled operational windows.
-3. **Performance Anomalies:** Query execution times deviating significantly from the established historical baseline for that specific query type.
+This repository contains all code, experiments, and visuals from the research paper **"Detecting Anomalies in Public Datasets Using Query Logs"**. The paper builds a unified detection framework using unsupervised hybrid ML models and evaluates whether a single model can handle all anomaly types — or whether each needs a dedicated detector.
 
 ---
 
-## 🛠️ Methodology & Models
+## The Core Question
 
-We implement and evaluate a unified framework utilizing three core unsupervised hybrid machine learning architectures:
-* **Isolation Forest:** For isolating global anomalies and high-dimensional outliers via random partitioning.
-* **DBSCAN (Density-Based Spatial Clustering of Applications with Noise):** For identifying dense clusters of normal behavior and flagging low-density queries as noise/anomalies.
-* **One-Class SVM:** For learning a non-linear decision boundary around standard operating queries to detect novel deviations.
+Query logs are a goldmine of behavioral signals. A well-behaved query looks like a regular customer. An anomalous one looks like someone who walked into a bank, asked for the vault password, and came back at 3am with a drill.
 
----
+This paper formalizes three classes of such "customers":
 
-## 📊 Datasets
+### Anomaly Categories
 
-The models are validated using two distinct query log environments:
-
-1.  **Benchmark Dataset:** Standardized analytical query workloads generated from the [TPC-H Benchmark (v3.0.1)](https://www.tpc.org/TPC_Documents_Current_Versions/pdf/TPC-H_v3.0.1.pdf). This provides predictable baseline patterns to test the models' precision boundaries.
-2.  **Actual/Production Dataset:** Relational OLTP query logs derived from the [Pagila (PostgreSQL sample database)](https://github.com/devrimgunduz/pagila/tree/master) schema, simulated with synthetic user traffic, maintenance jobs, and injected anomalies.
+| Category | What It Looks Like |
+|---|---|
+| **Security** | Unusual query structure, access to sensitive tables outside normal patterns, SQL injection-like signatures |
+| **Temporal** | Queries firing at wrong times, frequency spikes, bulk ops outside operational windows |
+| **Performance** | Execution time deviating significantly from historical baseline for that query type |
 
 ---
 
-## 📂 Repository Structure
+## Models Used
 
-```text
-├── data/                  # TPC-H and Pagila query logs (raw and preprocessed)
-├── src/
-│   ├── preprocessing/     # Query parsing, tokenization, and feature extraction
-│   ├── models/            # Isolation Forest, DBSCAN, and One-Class SVM implementations
-│   └── evaluation/        # Performance metrics, baseline comparison scripts
-├── visuals/               # ROC curves, t-SNE cluster plots, and anomaly distributions
-├── notebooks/             # Exploratory Data Analysis (EDA) and model prototyping
-├── requirements.txt       # Python dependencies
-└── README.md
+All models are **unsupervised** — no labeled anomalies needed at training time.
+
+- **Isolation Forest** — Isolates anomalies by randomly partitioning feature space. Think of it as: weird points need fewer cuts to isolate. Fast, works well on high-dimensional data.
+- **DBSCAN** — Density-based clustering. Points in sparse regions = anomalies. Great for temporal clustering and frequency spikes.
+- **One-Class SVM** — Learns a tight boundary around "normal". Anything outside is flagged. Works well for performance deviation where normal has a clear distribution.
+
+The hybrid framework combines outputs from all three to produce a unified anomaly score.
+
+---
+
+## Datasets
+
+| Role | Dataset | Description |
+|---|---|---|
+| **Benchmark** | [TPC-H v3.0.1](https://www.tpc.org/TPC_Documents_Current_Versions/pdf/TPC-H_v3.0.1.pdf) | Industry-standard decision support benchmark; used to define "normal" query workloads |
+| **Actual** | [Pagila](https://github.com/devrimgunduz/pagila) | PostgreSQL port of Sakila (DVD rental DB); used as the real-world target dataset |
+
+Synthetic anomalies were injected into Pagila query logs across all three categories for evaluation.
+
+---
+
+## Key Results (Summary)
+
+The paper answers the main question empirically. Spoiler: it's not a clean "one model wins" story.
+
+- **Isolation Forest** generalizes reasonably across all three categories but misses subtle temporal patterns.
+- **DBSCAN** dominates temporal anomaly detection; struggles with performance deviations.
+- **One-Class SVM** is the sharpest tool for performance anomalies but expensive to tune.
+- The **hybrid framework** outperforms any single model across all categories — specialization matters, but ensemble coordination wins.
+
+Full results, confusion matrices, and F1/Precision/Recall breakdowns are in `evaluation/` and the paper.
+
+---
